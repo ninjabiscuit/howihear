@@ -1,0 +1,22 @@
+#!/bin/sh
+
+BASE=${1:-`basename $PWD`}
+
+# Set up heroku git remote
+if [ -d .git ]; then
+  git remote add heroku git@heroku.com:$BASE.git
+else
+  echo "Heroku not setup. Not a git repository"
+fi
+
+# Set up DNS through Pow
+if [ -d ~/.pow ]
+then
+  mkdir -p ~/.pow/$BASE
+  mkdir -p  ./build
+
+  ln -s $(grealpath ./build) ~/.pow/$BASE/public
+  echo "Pow set up at http://$BASE.dev/"
+else
+  echo "Pow not set up. Setup: http://goo.gl/RaDPO"
+fi

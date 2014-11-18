@@ -1,30 +1,38 @@
 var dest = "./build";
 var src = './src';
+var assets = dest + '/assets';
 
 module.exports = {
-  browserSync: {
-    server: {
-      // We're serving the src folder as well
-      // for sass sourcemap linking
-      baseDir: [dest, src]
-    },
-    files: [
-      dest + "/**",
-      // Exclude Map files
-      "!" + dest + "/**.map"
-    ]
-  },
   sass: {
-    src: src + "/sass/*.{sass, scss}",
-    dest: dest
+    src: src + "/stylesheets/**/*.scss",
+    dest: assets,
+    includes: {
+      includePaths: [
+        require('node-bourbon').includePaths,
+        require('css-patterns').includePaths
+      ]
+    },
+    opts: {
+      dev: {
+        sourceComments: 'map', 
+        sourceMap: 'sass'
+      },
+      build: {
+        outputStyle: 'compressed'
+      }
+    }
   },
   images: {
     src: src + "/images/**",
-    dest: dest + "/images"
+    dest: assets + "/images"
   },
   markup: {
     src: src + "/htdocs/**",
-    dest: dest
+    dest: dest,
+    opts: {
+      ignorePartials: true, //ignores the unknown footer2 partial in the handlebars template, defaults to false
+      batch : [src + "/htdocs/partials"]
+    }
   },
   audio: {
     src: src + "/audio/**",
@@ -34,12 +42,11 @@ module.exports = {
     // Enable source maps
     debug: true,
     // Additional file extentions to make optional
-    extensions: ['.js', '.hbs'],
     // A separate bundle will be generated for each
     // bundle config in the list below
     bundleConfigs: [{
-      entries: src + '/javascript/application.js',
-      dest: dest,
+      entries: src + '/javascripts/application.js',
+      dest: assets,
       outputName: 'application.js'
     }]
   }

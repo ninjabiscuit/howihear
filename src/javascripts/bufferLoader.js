@@ -33,7 +33,7 @@ function decode(buffer) {
   });
 }
 
-function load() {
+function load(urlList) {
   if (!Array.isArray(urlList)) {
     throw "Error: must provide array of audio paths";
   }

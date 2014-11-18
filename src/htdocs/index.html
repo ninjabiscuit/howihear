@@ -6,6 +6,7 @@
     <title></title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/application.css">
   </head>
   <body>
     <!--[if lt IE 8]>
@@ -15,6 +16,31 @@
       <button class="play" data-sound="picard.mp3">play picard</button>
       <button class="play" data-sound="speech.mp3">play speech</button>
       <button id="toggle">toggle</button>
+
+      <div class="charts">
+        <div class="left-chart">
+          <h2>Left</h2>
+          <h2 class="frequency-title">Frequency (Hz)</h2>
+          <h2 class="intensity-title">Intensity (dB)</h2>
+          <svg id="leftChart" width="500" height="500"></svg>
+        </div>
+        <div class="right-chart">
+          <h2>Right</h2>
+          <h2 class="frequency-title">Frequency (Hz)</h2>
+          <h2 class="intensity-title">Intensity (dB)</h2>
+          <svg id="rightChart" width="500" height="500"></svg>
+        </div>
+        <ul class="key">
+          <li class="key__normal">Normal</li>
+          <li class="key__mild">Mild</li>
+          <li class="key__moderate">Moderate</li>
+          <li class="key__severe">Severe</li>
+          <li class="key__profound">Profound</li>
+        </ul>
+
+      </div>
+
+      <!--
 
       <table>
         <tr>
@@ -52,7 +78,8 @@
         </tr>
       </table>
 
-      <script src="application.js"></script>
+      -->
+      <script src="assets/application.js"></script>
 
     </body>
   </html>
