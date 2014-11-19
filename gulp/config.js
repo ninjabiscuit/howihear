@@ -1,4 +1,4 @@
-var dest = "./build";
+var dest = "./public";
 var src = './src';
 var assets = dest + '/assets';
 

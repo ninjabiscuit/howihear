@@ -2,8 +2,8 @@ var bufferLoader = require("./bufferLoader");
 var hearingTestData = require("./data")
 
 var AUDIO_PATHS = [
-  'picard.mp3',
-  'speech.mp3'
+  'female-radio4.mp3',
+  'male-radio4.mp3'
 ];
 
 var context = new (AudioContext || webkitAudioContext)();
@@ -16,41 +16,54 @@ function audioReady(bufferList) {
     memo[key] = buffer;
     return memo;
   }, sources);
+  console.log("audio ready")
 }
 
-function createBufferSource(buffer) {
-  var source = context.createBufferSource();
-  source.buffer = buffer;
-  source.connect(context.destination);
-  source.onended = function(){
-    playing = false;
-    filtered = false;
+function AudioSource(sound) {
+  var fn = this;
+  this.source = context.createBufferSource();
+  this.source.buffer = sources[sound];
+  this.source.connect(context.destination);
+  this.source.onended = function(){
+    fn.playing = false;
   };
-  return source;
+  this.playing = false;
+  this.filtered = false;
+  return this;
 }
 
-function play(sound) {
-  if (!sound) { return; }
-  currentSound = createBufferSource(sources[sound]);
-  if (!currentSound.start) {
-    currentSound.start = currentSound.noteOff;
+AudioSource.prototype.play = function() {
+  if (!this.source.start) {
+    this.source.start = this.source.noteOff;
   }
-  currentSound.start(0);
-  playing = true;
-}
-
-function stop() {
-  //console.log(!currentSound, "boom")
-  if (!currentSound) { return; }
-  currentSound.stop(0);
-  playing = false;
-  filtered = false;
+  this.source.start(0);
+  this.playing = true;
 };
 
-function togglePlay(sound) {
-  //console.log(playing ? "stop" : "play");
-  playing ? stop(sound) : play(sound);
-  //console.log(playing)
+AudioSource.prototype.stop = function() {
+  this.source.stop(0);
+  this.playing = false;
+};
+
+AudioSource.prototype.filterOff = function() {
+  this.source.disconnect();
+  this.source.connect(context.destination);
+  this.filtered = false;
+}
+
+AudioSource.prototype.filterOn = function() {
+  var splitter = context.createChannelSplitter(2);
+  var merger = context.createChannelMerger(2);
+
+  this.source.disconnect();
+  this.source.connect(splitter);
+
+  this.filtered = true;
+
+  applyFilters(splitter, hearingTestData.left, 0).connect(merger, 0, 0);
+  applyFilters(splitter, hearingTestData.right, 1).connect(merger, 0, 1);
+
+  merger.connect(context.destination);
 }
 
 function applyFilters(source, data, channel) {
@@ -63,7 +76,7 @@ function applyFilter(source, data, channel) {
   var filter = context.createBiquadFilter();
   filter.type = "peaking";
   filter.frequency.value = data.hz;
-  filter.Q.value = 30;
+  filter.Q.value = 35;
   filter.gain.value = -data.db;
 
   source.connect(filter, channel);
@@ -71,49 +84,43 @@ function applyFilter(source, data, channel) {
   return filter;
 }
 
-function filterOff() {
-  currentSound.disconnect();
-  currentSound.connect(context.destination);
-  filtered = false;
+function play(sound) {
+  if (!sound) { return; }
+  if (currentSound) {
+    currentSound.stop();
+  }
+  currentSound = new AudioSource(sound);
+  currentSound.play();
 }
 
-function filterOn() {
-  var splitter = context.createChannelSplitter(2);
-  var merger = context.createChannelMerger(2);
+function stop() {
+  if (!currentSound) { return; }
+  currentSound.stop();
+  currentSound = null;
+};
 
-  filtered = true;
+function togglePlay(sound) {
+  isCurrentSound(sound) ? stop() : play(sound);
+}
 
-  currentSound.disconnect();
-  currentSound.connect(splitter);
-
-  applyFilters(splitter, hearingTestData.left, 0).connect(merger, 0, 0);
-  applyFilters(splitter, hearingTestData.right, 1).connect(merger, 0, 1);
-
-  merger.connect(context.destination);
+function toggleFilter() {
+  currentSound.filtered ? currentSound.filterOff() : currentSound.filterOn();
 }
 
 function isCurrentSound(name) {
-  console.log(playing, "playing")
-  console.log(currentSound.buffer === sources[name], "buffer")
-  return currentSound.buffer === sources[name]
+  return currentSound && (currentSound.source.buffer === sources[name]);
 }
 
 var playButtons = document.querySelectorAll(".play");
 var toggleButton = document.getElementById("toggle");
 
 document.addEventListener("click", function(e){
-  if (e.target.classList.contains("play")) {
-    if (!isCurrentSound(e.target.getAttribute("data-sound"))) { stop(); }
-    togglePlay(e.target.getAttribute("data-sound"));
-  }
+  if (!e.target.classList.contains("play")) { return; }
+  togglePlay(e.target.getAttribute("data-sound"));
 }, false);
 
 toggleButton.addEventListener("click", function(){
-  if (!playing) {return;}
-  if (filtered) {
-    filterOff();
-    return;
-  }
-  filterOn();
+  if (!currentSound) {return;}
+  toggleFilter();
 }, false);
 
